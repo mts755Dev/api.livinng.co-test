@@ -1,0 +1,164 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Host {
+  id            String          @id @default(uuid())
+  name          String
+  dni           String
+  email         String          @unique
+  emailVerified Boolean         @default(false)
+  phone         Int?
+  password      String
+  disabled      Boolean         @default(false)
+  Reservations  Reservations[]
+  Accommodation Accommodation[]
+}
+
+model Client {
+  id           String         @id @default(uuid())
+  name         String
+  email        String         @unique
+  phone        Int?
+  disabled     Boolean        @default(false)
+  Reservations Reservations[]
+  Review       Review[]
+  Favorites    Favorites[]
+}
+
+model Admin {
+  id       String @id @default(uuid())
+  name     String
+  email    String @unique
+  password String
+}
+
+model Accommodation {
+  id           String         @id @default(uuid())
+  name         String         @unique
+  image        String[]
+  price        Int
+  guests       Int
+  bathroom     Int
+  description  String
+  address      String?
+  rooms        Int
+  beds         Int
+  Views        Int            @default(0)
+  distribution String
+  location     String
+  disabled     Boolean        @default(false)
+  type         Types          @relation(fields: [typeId], references: [name])
+  typeId       String
+  size         Size           @relation(fields: [sizeId], references: [name])
+  sizeId       String
+  services     Services[]     @relation("AccommodationServices")
+  Occupancy    Occupancy[]    @relation("AccommodationOccupancy")
+  host         Host           @relation(fields: [hostId], references: [id])
+  hostId       String
+  Review       Review[]
+  Reservations Reservations[]
+  favorties    Favorites[]
+}
+
+model Favorites {
+  id              String         @id @default(uuid())
+  Client          Client?        @relation(fields: [clientId], references: [id])
+  clientId        String?
+  Accommodation   Accommodation? @relation(fields: [accommodationId], references: [id])
+  accommodationId String?
+}
+
+model Token {
+  id    String @id @default(uuid())
+  token String
+}
+
+model Types {
+  name          String          @id
+  Accommodation Accommodation[]
+}
+
+model Size {
+  name          String          @id
+  Accommodation Accommodation[]
+}
+
+model Services {
+  name           String          @id
+  accommodations Accommodation[] @relation("AccommodationServices")
+}
+
+model Occupancy {
+  id            Int             @id @default(autoincrement())
+  initialDate   DateTime
+  finalDate     DateTime
+  accommodation Accommodation[] @relation("AccommodationOccupancy")
+  Reservations  Reservations[]
+}
+
+model Review {
+  id              String        @id @default(uuid())
+  comment         String        @db.Text
+  dateTime        DateTime      @default(now())
+  Rating          Int
+  accommodation   Accommodation @relation(fields: [accommodationId], references: [id])
+  accommodationId String
+  client          Client        @relation(fields: [clientId], references: [id])
+  clientId        String
+}
+
+model Reservations {
+  id              String        @id @default(uuid())
+  name            String
+  email           String
+  phone           BigInt
+  dates           DateTime[]
+  childs          Int?
+  adults          Int
+  price           Int
+  nights          Int
+  total           Int
+  dateTime        DateTime      @default(now())
+  state           State         @relation(fields: [stateId], references: [name])
+  stateId         String        @default("Pendiente")
+  Client          Client        @relation(fields: [clientId], references: [id])
+  clientId        String
+  accommodation   Accommodation @relation(fields: [accommodationId], references: [id])
+  accommodationId String
+  Host            Host          @relation(fields: [hostId], references: [id])
+  hostId          String
+  Occupancy       Occupancy?    @relation(fields: [occupancyId], references: [id])
+  occupancyId     Int?
+}
+
+model State {
+  name         String         @id
+  Reservations Reservations[]
+}
+
+model Epayco {
+  email     String
+  amount    Int
+  title     String @unique
+  id        String
+  routeLink String
+}
+
+model Auth {
+  id    Int    @id @default(autoincrement())
+  token String @db.VarChar(900)
+}
+
+model Authadmin {
+  id    Int    @id @default(autoincrement())
+  token String @db.VarChar(900)
+}
